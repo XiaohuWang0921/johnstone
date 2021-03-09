@@ -1,0 +1,72 @@
+\import Function
+\import Function.Meta
+\import Logic
+\import Paths
+
+\data Unit | tt
+
+\func monic {A B : \Type} (f : A -> B) => \Pi (x y : A) -> f x = f y -> x = y
+
+\lemma johnstone (f : \Prop -> \Prop) (m : monic f) : f o f = id
+  =>
+    \let!
+      | UT : \Set0 => \Sigma (p : \Prop) (f p)
+      | VT : \Set0 => \Sigma (p : \Prop) (f p) p
+      | UP : \Prop => TruncP UT
+      | VP : \Prop => TruncP VT
+
+      | h0 (w : f Unit) : VP => inP (Unit, w, tt)
+
+      | h1 (w : VP) : f Unit =>
+          \case w \with {
+            | inP (_, w0, w1) =>
+              transport f (propExt (\lam _ => tt) (\lam _ => w1)) w0
+          }
+      | h2 : f Unit = VP => propExt h0 h1
+
+      | h3 (t : UT) : t.1 -> VP =>
+          \case \elim t \with {
+            | (p, w0) => \lam w1 => inP (p, w0, w1)
+          }
+      | h4 (t : UT) (w : VP) : t.1 =>
+          \case \elim t, w \with {
+            | (p0, w0), inP (p1, w1, w2) =>
+              transport id (m p1 p0 (propExt (\lam _ => w0) (\lam _ => w1))) w2
+          }
+      | h5 (t : UT) : t.1 = VP => propExt (h3 t) (h4 t)
+
+      | h6 (w : f VP) : UP => inP (VP, w)
+      | h7 (w : UP) : f VP =>
+          \case \elim w \with {
+            | inP (p, w0) => transport f (h5 (p, w0)) w0
+          }
+      | h8 : f VP = UP => propExt h6 h7
+
+      | h9 (t : UT) : t.1 -> t.1 = UP =>
+          \case \elim t \with {
+            | (p, w) => \lam w0 => propExt (\lam _ => inP (p, w)) (\lam _ => w0)
+          }
+      | h10 (w : f Unit) : f UP => transport f (h9 (Unit, w) tt) w
+
+      | h11 (w : f UP) : f Unit => h1 (inP (UP, w, inP (UP, w)))
+
+      | h12 : f UP = f Unit => propExt h11 h10
+
+      | h13 : UP = Unit => m UP Unit h12
+
+      | h14 : f (f Unit) = Unit => pmap f h2 *> h8 *> h13
+
+      | h15 (p : \Prop) (w : f (f p)) : p =>
+        transport id
+            (m Unit p $
+                m (f Unit) (f p) $
+                    h14 *> propExt (\lam _ => w) (\lam _ => tt))
+            tt
+      | h16 (p : \Prop) (w : p) : f (f p) =>
+        transport id
+            (inv h14 *> pmap f
+                            (pmap f $
+                                propExt (\lam _ => w) (\lam _ => tt)))
+            tt
+
+    \in path (\lam i p => propExt (h15 p) (h16 p) @ i)

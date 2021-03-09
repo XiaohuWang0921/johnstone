@@ -75,14 +75,14 @@ theorem johnstone : φ (φ p) = p :=
         trans h₈ h₁₃,
   
     h₁₅ (w : φ $ φ p) : p :=
-      @eq.rec Prop true id true.intro p $
+      @eq.rec Prop true id intro p $
         μ true p $
           μ (φ true) (φ p) $
             trans h₁₄ $
               propext ⟨(λ _, w), (λ _, intro)⟩,
   
     h₁₆ (w : p) : φ $ φ p :=
-      @eq.rec Prop true id true.intro (φ $ φ p) $
+      @eq.rec Prop true id intro (φ $ φ p) $
         trans (symm h₁₄) $
           congr (eq.refl φ) $
             congr (eq.refl φ) $
